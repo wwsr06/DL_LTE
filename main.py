@@ -1,74 +1,65 @@
 ﻿#coding=utf-8
 import sys
 import sync
-import downlink
+import sigstream
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.fftpack import fft,ifft
 
-#define global buffer
-IQDateBuf = [ [0] * 2 for i in range(163840)];
+#define global variables
+IQDateBuf = [0 for i in range(307200)];
+SampleRate = 7680 #15360 30720
 
 
 ################################################################
 #             read IQ Data
 ################################################################
-f = open('iq.dat','r')
-r = f.readlines()
-f.close()
+#IQDateBuf = sigstream.get_sig_stream("iq.dat",0,76800)
+#IQDateBuf = sigstream.get_sig_stream("arfcn1300_cellid408_7p68M_76800samples.txt",0,76800)
+#IQDateBuf = sigstream.get_sig_stream("arfcn1300_cellid408_15p36M_153600samples.txt",0,153600)
+IQDateBuf = sigstream.get_sig_stream("arfcn1300_cellid408_30p72M_307200samples.txt",0,307200)
 
-cnt = 0;
-for line in r:
-		iqpare = line.split('\t')
-		i_p = int(iqpare[0])
-		q_p = int(iqpare[1])
-		
-		IQDateBuf[cnt][0] = i_p
-		IQDateBuf[cnt][1] = q_p
-		
-		cnt += 1
-		if cnt > 163839:
-			break
+'''
+x=np.linspace(0,1,4096)
+spos = 0
+y = IQDateBuf[spos:spos+2048]
 
+ff = fft(y)
+ffabs = abs(ff)
+ffabsnorm = ffabs/len(x)
+
+fftplot = [0 for i in range(2048)];
+fftplot[0:1023] = ffabsnorm[1024:2048]
+fftplot[1024:2048] = ffabsnorm[0:1023]
+	
+plt.plot(ffabsnorm,label="fft res")
+plt.show()
+input()
+'''
 
 ################################################################
 #             Sync process
 ################################################################
 
-NewIQDateBuf = [ [0] * 2 for i in range(163840)];
-for i in range(76800):
-	NewIQDateBuf[i] = IQDateBuf[76800+i]
+#----Corse time Sync use pss
+#CorRes = sync.Corse_Sync(IQDateBuf,153600,512+36,7680*5)
+#CorRes = sync.Corse_Sync(IQDateBuf,7680*10,512+36,7680*5)
+#CorRes = sync.Corse_Sync(IQDateBuf,15360*10,1024+72,15360*5)
+CorRes = sync.Corse_Sync(IQDateBuf,30720*10,2048+144,30720*5)
+CorseSyncPos = CorRes.index(max(CorRes))
 
-
-
-CorRes = sync.corr_PSSSSS(IQDateBuf,153600,512+36,7680*5)
+'''
 plt.plot(CorRes,label="corr res")
 plt.legend()
 plt.show()
-
-
-'''
-plt.plot(x,label="real")
-plt.legend()
-plt.show()
-plt.plot(y,label="imag")
-plt.legend()
-plt.show()
 '''
 
+#----Detect NID2 use pss
+CorseSyncBuf = IQDateBuf[CorseSyncPos+144:CorseSyncPos+144+2048]
+NID_2 = sync.NID2_detection(CorseSyncBuf,2048)
 
-'''
-x = np.linspace(0.05, 10, 1000)
-y = np.cos(x)
-#plt.plot(x, y, ls="-", lw=2, label="plot figure")
-plt.plot(y)
-plt.legend()
-plt.show()
+#---Detect NID1 use sss
+CorseSyncBuf = IQDateBuf[CorseSyncPos-2048:CorseSyncPos]
+NID_1 = sync.NID1_detection(CorseSyncBuf,2048)
 
-print (__name__)
 
-import sync
-print (sync.fun_a(10))
-
-import downlink
-print (downlink.fun_a(10))		
-'''
