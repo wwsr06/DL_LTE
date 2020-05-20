@@ -1,7 +1,7 @@
 ﻿#coding=utf-8
 import sys
 
-print (__name__)
+#print (__name__)
 
 def fun_a(a):
 	return a*10

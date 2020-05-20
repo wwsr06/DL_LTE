@@ -1,7 +1,7 @@
 ﻿#coding=utf-8
 import sys
 
-print (__name__)
+#print (__name__)
 
 #get %length% samples of signal from iqdata file %fname%
 def get_sig_stream(fname,startpos,length):

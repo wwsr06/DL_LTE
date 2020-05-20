@@ -5,7 +5,7 @@ import math
 from scipy.fftpack import fft,ifft
 import matplotlib.pyplot as plt
 
-print (__name__)
+#print (__name__)
 
 def corr_pow(A,B):
 	
@@ -21,6 +21,23 @@ def corr_pow(A,B):
 	
 	return res
 	
+def freqerr_est(tbuf0,tbuf1):
+	
+	fsig0 = fft(tbuf0)
+	fsig1 = fft(tbuf1)
+	c62_sc_0 =  np.hstack((fsig0[-31:],fsig0[:31]))
+	c62_sc_1 =  np.hstack((fsig1[-31:],fsig1[:31]))
+		
+	cores = 0	
+	for i in range(0,62):
+		cores += c62_sc_0[i] * c62_sc_1[i].conjugate()
+	
+	at = np.arctan(cores.imag/cores.real)
+	print (at/3.1415926)
+	input()
+	
+	return 1
+
 
 def poscalc(slidelen,pos):
 	if pos >= slidelen:
@@ -29,7 +46,7 @@ def poscalc(slidelen,pos):
 	return pos
 
 
-def Corse_Sync(sig,slidelen,winlen,winitl):
+def Coarse_Sync(sig,slidelen,winlen,winitl):
 	ResCorr = [0 for i in range(slidelen)]
 
 	#calc initial value
@@ -99,7 +116,7 @@ def nid2_corr(rxfsig,nid2):
 		localpss_diff[i] = localpss[i+1]/localpss[i]
 	
 	ResCorr=0
-	for i in range(61):		
+	for i in range(62):		
 		ResCorr += rxfsig_diff[i] * localpss_diff[i].conjugate()
 		
 	return abs(ResCorr)
@@ -110,17 +127,13 @@ def NID2_detection(tsig,fftN):
 	fsig = fft(tsig)
 	ffabs = abs(fsig)
 	fsig = fsig/max(ffabs)
-	
 	'''
-	fout = open('debugout.txt', 'w')
-	for i in range(len(fsig)):
-		fout.write(str(fsig[i]))
-		fout.write('\n')
-	fout.close()
+	plt.plot(ffabs,label="fft res")
+	plt.legend()
+	plt.show()
 	'''
-	
 	#---Get central 62 subcarriers
-	c72_sc =  np.hstack((fsig[-36:],fsig[:36]))
+	c72_sc =  np.hstack((fsig[1:37] , fsig[-36:]))
 	c62_sc = c72_sc[5:-5]
 	
 		
