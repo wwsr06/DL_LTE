@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.fftpack import fft,ifft
 
-#create dev branch by wsj @2020/11/6
+#This is master branch
 
 #define global variables
 IQDateBuf = [0 for i in range(307200)];
